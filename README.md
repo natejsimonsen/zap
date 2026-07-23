@@ -51,7 +51,18 @@ make install        # builds Zap.app and copies it to /Applications
 open /Applications/Zap.app
 ```
 
-Add `/Applications/Zap.app` to **System Settings → General → Login Items** to start at login.
+## Start at login
+
+```sh
+make autostart       # install a LaunchAgent and start Zap now
+make autostart-off   # remove it
+```
+
+`make autostart` installs `~/Library/LaunchAgents/com.zap.launcher.plist` pointing at your
+install (flox or `/Applications`) and launches Zap immediately. For a flox install it
+resolves the stable `~/.flox/run/…` path, so it keeps working across `flox upgrade`.
+(For an `/Applications` install you can instead just add `Zap.app` to
+**System Settings → General → Login Items**.)
 
 ## Hotkeys
 

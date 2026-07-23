@@ -38,6 +38,14 @@ uninstall: ## Remove $(APP).app from /Applications
 nix-build: ## Build via the Nix flake
 	nix --extra-experimental-features "nix-command flakes" build -L
 
+.PHONY: autostart
+autostart: ## Start Zap at login (installs a LaunchAgent) and start it now
+	@bash contrib/install-login-item.sh
+
+.PHONY: autostart-off
+autostart-off: ## Remove the login-item LaunchAgent
+	@bash contrib/uninstall-login-item.sh
+
 .PHONY: clean
 clean: ## Remove build artifacts
 	rm -rf .build $(APP).app Zap.zip result
