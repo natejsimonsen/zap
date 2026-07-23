@@ -43,12 +43,15 @@ public enum AppIndex {
     /// Find `.app` bundles under `base`, descending `depth` levels into plain
     /// subdirectories (e.g. `/Applications/Utilities`) but never into a bundle itself.
     private static func appBundles(in base: URL, fileManager fm: FileManager, depth: Int) -> [URL] {
+        // Don't skip hidden files: some system apps (e.g. Safari) are hidden
+        // symlinks into /System/Cryptexes. Skip dotfiles manually instead.
         guard let entries = try? fm.contentsOfDirectory(
             at: base, includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]) else { return [] }
+            options: []) else { return [] }
 
         var found: [URL] = []
         for entry in entries {
+            if entry.lastPathComponent.hasPrefix(".") { continue }
             let isDir = (try? entry.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
             if entry.pathExtension == "app" {
                 found.append(entry)

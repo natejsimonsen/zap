@@ -74,6 +74,7 @@ func testAppIndex() {
 
     makeBundle("Safari.app")
     makeBundle("Notes.app")
+    makeBundle(".Trashed.app") // dotfile-prefixed: must be skipped
     makeBundle("Utilities/Terminal.app")
     makeBundle("Xcode.app")
     makeBundle("Xcode.app/Contents/Applications/Instruments.app")
@@ -84,6 +85,7 @@ func testAppIndex() {
 
     check(names.contains("Safari"), "finds top-level Safari")
     check(names.contains("Notes"), "finds top-level Notes")
+    check(!names.contains(".Trashed"), "skips dotfile-prefixed bundles")
     check(names.contains("Terminal"), "recurses into Utilities")
     check(names.contains("Xcode"), "finds Xcode")
     check(!names.contains("Instruments"), "does not descend into bundle internals")
