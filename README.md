@@ -21,8 +21,11 @@ nothing else. Runs as a menu-bar agent with no Dock icon.
 
 ```sh
 brew tap natejsimonsen/zap https://github.com/natejsimonsen/zap
-brew install --cask zap
+brew install --cask natejsimonsen/zap/zap
 ```
+
+> Use the fully-qualified `natejsimonsen/zap/zap` — the bare `zap` cask name is
+> already taken by an unrelated tool in Homebrew's main cask repo.
 
 Zap is not notarized, so the first launch triggers Gatekeeper. Either right-click
 `Zap.app` in `/Applications` → **Open**, or run `xattr -dr com.apple.quarantine /Applications/Zap.app`.
