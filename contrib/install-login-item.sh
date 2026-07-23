@@ -50,4 +50,4 @@ launchctl bootstrap "${DOMAIN}" "${PLIST}"
 launchctl kickstart -k "${DOMAIN}/${LABEL}"
 
 echo "Installed login item '${LABEL}' -> ${ZAP}"
-echo "Zap will now start at login. Remove with: make autostart-off"
+echo "Zap will now start at login. Remove with: make autostart-off / zap-autostart-off"
