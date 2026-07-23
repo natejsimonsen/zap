@@ -75,7 +75,8 @@ falls back to defaults:
   "searchPaths": ["~/Developer/Apps", "/opt/homebrew/Caskroom"],
   "accentColor": "purple",
   "transparency": 0.8,
-  "density": "comfortable"
+  "density": "comfortable",
+  "hotkeys": ["opt+space", "cmd+space"]
 }
 ```
 
@@ -85,8 +86,11 @@ falls back to defaults:
 | `accentColor` | hex (`#RRGGBB`, `#RGB`, `#RRGGBBAA`) or a name: `blue` `purple` `pink` `red` `orange` `yellow` `green` `teal` `graphite` | system accent | Selection highlight color |
 | `transparency` | `0.0`–`1.0` | `0.8` | `0` = opaque, `1` = maximum blur / most see-through |
 | `density` | `compact` \| `simple` \| `comfortable` | `comfortable` | Row spacing, font, icon, and window size |
+| `hotkeys` | list of `mod+…+key` (mods: `cmd` `opt` `ctrl` `shift`; keys: letters, digits, `space`, `return`, `tab`, `escape`) | `["opt+space", "cmd+space"]` | Global keys that toggle the launcher; all valid ones register |
 
-Changes take effect the next time you open the launcher — no restart needed.
+`searchPaths`, `accentColor`, `transparency`, and `density` take effect the next time you
+open the launcher. **`hotkeys` are read once at launch** — quit and relaunch Zap to apply.
+An all-invalid `hotkeys` list falls back to the defaults, so a typo never locks you out.
 
 ## Usage
 

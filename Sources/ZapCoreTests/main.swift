@@ -152,10 +152,42 @@ func testAppearance() {
           "simple list taller than compact")
 }
 
+func testHotKeySpec() {
+    print("HotKeySpec")
+    let cmdSpace = HotKeySpec(string: "cmd+space")
+    check(cmdSpace?.keyCode == 49, "space key code is 49")
+    check(cmdSpace?.modifiers == HotKeySpec.cmd, "cmd modifier mask")
+    check(cmdSpace?.display == "⌘Space", "cmd+space display")
+
+    check(HotKeySpec(string: "opt+space")?.modifiers == HotKeySpec.option, "opt modifier mask")
+
+    let combo = HotKeySpec(string: "ctrl+shift+k")
+    check(combo?.modifiers == (HotKeySpec.control | HotKeySpec.shift), "combined modifier mask")
+    check(combo?.keyCode == 40, "k key code")
+    check(combo?.display == "⌃⇧K", "combo display normalized")
+
+    // Modifier order doesn't matter.
+    check(HotKeySpec(string: "shift+cmd+a") == HotKeySpec(string: "cmd+shift+a"), "modifier order agnostic")
+
+    // Invalid inputs.
+    check(HotKeySpec(string: "cmd+space+return") == nil, "two keys is invalid")
+    check(HotKeySpec(string: "cmd+nope") == nil, "unknown key is invalid")
+    check(HotKeySpec(string: "cmd") == nil, "modifier only is invalid")
+    check(HotKeySpec(string: "") == nil, "empty is invalid")
+
+    // Config default + fallback.
+    check(Config().resolvedHotKeys().map(\.display) == ["⌥Space", "⌘Space"], "default hotkeys")
+    check(Config(hotkeys: ["garbage"]).resolvedHotKeys().map(\.display) == ["⌥Space", "⌘Space"],
+          "all-invalid hotkeys fall back to defaults")
+    check(Config(hotkeys: ["ctrl+space"]).resolvedHotKeys().map(\.display) == ["⌃Space"],
+          "valid custom hotkey used")
+}
+
 testFuzzyMatcher()
 testAppIndex()
 testConfig()
 testAppearance()
+testHotKeySpec()
 
 print("")
 if failures == 0 {

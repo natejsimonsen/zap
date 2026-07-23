@@ -24,17 +24,24 @@ public struct Config: Equatable {
     public var transparency: Double
     /// Layout density.
     public var density: Density
+    /// Global hotkey strings (e.g. `"opt+space"`). All valid ones are registered.
+    public var hotkeys: [String]
+
+    /// The built-in default hotkeys used when config omits `hotkeys`.
+    public static let defaultHotkeys = ["opt+space", "cmd+space"]
 
     public init(
         searchPaths: [String] = [],
         accentColor: String? = nil,
         transparency: Double = 0.8,
-        density: Density = .comfortable
+        density: Density = .comfortable,
+        hotkeys: [String] = Config.defaultHotkeys
     ) {
         self.searchPaths = searchPaths
         self.accentColor = accentColor
         self.transparency = transparency.clamped(to: 0...1)
         self.density = density
+        self.hotkeys = hotkeys
     }
 
     /// The default config location: `~/.config/zap/config.json`.
@@ -63,11 +70,19 @@ public struct Config: Equatable {
     public func resolvedAccent() -> RGBAColor? {
         accentColor.flatMap(RGBAColor.init(string:))
     }
+
+    /// Parsed hotkeys, dropping any that fail to parse. Falls back to the defaults if
+    /// nothing valid remains, so a typo never leaves Zap with no way to open.
+    public func resolvedHotKeys() -> [HotKeySpec] {
+        let parsed = hotkeys.compactMap(HotKeySpec.init(string:))
+        if !parsed.isEmpty { return parsed }
+        return Config.defaultHotkeys.compactMap(HotKeySpec.init(string:))
+    }
 }
 
 extension Config: Decodable {
     private enum CodingKeys: String, CodingKey {
-        case searchPaths, accentColor, transparency, density
+        case searchPaths, accentColor, transparency, density, hotkeys
     }
 
     public init(from decoder: Decoder) throws {
@@ -76,7 +91,9 @@ extension Config: Decodable {
         let accent = try c.decodeIfPresent(String.self, forKey: .accentColor)
         let transp = try c.decodeIfPresent(Double.self, forKey: .transparency) ?? 0.8
         let density = try c.decodeIfPresent(Density.self, forKey: .density) ?? .comfortable
-        self.init(searchPaths: paths, accentColor: accent, transparency: transp, density: density)
+        let hotkeys = try c.decodeIfPresent([String].self, forKey: .hotkeys) ?? Config.defaultHotkeys
+        self.init(searchPaths: paths, accentColor: accent, transparency: transp,
+                  density: density, hotkeys: hotkeys)
     }
 }
 

@@ -1,5 +1,4 @@
 import AppKit
-import Carbon.HIToolbox
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -11,29 +10,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Menu-bar agent: no Dock icon, no menu bar takeover.
         NSApp.setActivationPolicy(.accessory)
 
-        setupStatusItem()
-
         let toggle: () -> Void = { [weak self] in
             // Carbon dispatches on the main run loop; hop to the main actor explicitly.
             MainActor.assumeIsolated { self?.controller.toggle() }
         }
-        // Both hotkeys toggle the launcher. Option+Space works out of the box;
-        // Cmd+Space only registers once Spotlight's shortcut is freed.
-        hotKeys = [
-            HotKey(id: 1, keyCode: UInt32(kVK_Space), modifiers: UInt32(optionKey),
-                   name: "Option+Space", onPress: toggle),
-            HotKey(id: 2, keyCode: UInt32(kVK_Space), modifiers: UInt32(cmdKey),
-                   name: "Cmd+Space", onPress: toggle),
-        ]
+        // Register every configured hotkey (defaults: ⌥Space and ⌘Space). Read once at
+        // launch, so changing `hotkeys` in config takes effect after a restart.
+        let specs = Config.load().resolvedHotKeys()
+        hotKeys = specs.enumerated().map { index, spec in
+            HotKey(id: UInt32(index + 1), keyCode: spec.keyCode, modifiers: spec.modifiers,
+                   name: spec.display, onPress: toggle)
+        }
+
+        setupStatusItem(hotkeyLabels: specs.map(\.display))
     }
 
-    private func setupStatusItem() {
+    private func setupStatusItem(hotkeyLabels: [String]) {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.image = NSImage(
             systemSymbolName: "bolt.fill", accessibilityDescription: "Zap")
 
+        let keys = hotkeyLabels.isEmpty ? "hotkey" : hotkeyLabels.joined(separator: " / ")
         let menu = NSMenu()
-        menu.addItem(withTitle: "Zap — ⌥Space (or ⌘Space) to search", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "Zap — \(keys) to search", action: nil, keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(
             withTitle: "Quit Zap", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
