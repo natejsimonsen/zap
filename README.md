@@ -38,6 +38,19 @@ nix run github:natejsimonsen/zap      # run once
 nix profile install github:natejsimonsen/zap   # install
 ```
 
+### flox
+
+```sh
+flox install 'github:natejsimonsen/zap'   # into your flox env
+zap-autostart                             # (optional) start Zap at login
+```
+
+The package ships `zap-autostart` (and `zap-autostart-off`) on `PATH`, so a flox install
+can enable a login item with **one command — no repo checkout**. It installs a
+LaunchAgent pointing at the stable `~/.flox/run/…` path, so it survives `flox upgrade`.
+`flox install` alone won't create the login item — Nix/flox don't mutate the host on
+install, so running `zap-autostart` once is the imperative opt-in.
+
 ### From a release
 
 Download `Zap.zip` from the [latest release](https://github.com/natejsimonsen/zap/releases),

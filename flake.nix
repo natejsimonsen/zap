@@ -51,6 +51,11 @@
             </plist>
             EOF
             ln -s "$appdir/Contents/MacOS/Zap" "$out/bin/zap"
+
+            # Ship the login-item installer so `flox install` users can enable
+            # autostart with one command: `zap-autostart`.
+            install -m 0755 contrib/install-login-item.sh "$out/bin/zap-autostart"
+            install -m 0755 contrib/uninstall-login-item.sh "$out/bin/zap-autostart-off"
             runHook postInstall
           '';
 
