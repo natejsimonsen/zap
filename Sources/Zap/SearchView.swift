@@ -55,7 +55,6 @@ struct SearchView: View {
                                 name: app.name,
                                 selected: index == model.selection
                             )
-                            .id(index)
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 model.selection = index
@@ -66,7 +65,10 @@ struct SearchView: View {
                     .padding(8)
                 }
                 .onChange(of: model.selection) { _, newValue in
-                    withAnimation(.easeOut(duration: 0.1)) { proxy.scrollTo(newValue, anchor: .center) }
+                    guard model.results.indices.contains(newValue) else { return }
+                    withAnimation(.easeOut(duration: 0.1)) {
+                        proxy.scrollTo(model.results[newValue].id, anchor: .center)
+                    }
                 }
             }
         }
