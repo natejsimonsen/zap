@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:5.9
 import PackageDescription
 
 let package = Package(
@@ -8,16 +8,14 @@ let package = Package(
         .target(name: "ZapCore"),
         .executableTarget(
             name: "Zap",
-            dependencies: ["ZapCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["ZapCore"]
         ),
         // Self-contained check runner: `swift run ZapCoreTests`.
         // (The Command Line Tools toolchain ships no XCTest/Testing swiftmodule,
         // so a plain executable is what actually runs in this environment.)
         .executableTarget(
             name: "ZapCoreTests",
-            dependencies: ["ZapCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["ZapCore"]
         ),
     ]
 )
