@@ -62,7 +62,7 @@ struct SearchView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 2) {
-                        ForEach(Array(model.results.prefix(60).enumerated()), id: \.element.id) { index, app in
+                        ForEach(Array(model.results.enumerated()), id: \.element.id) { index, app in
                             ResultRow(
                                 icon: model.icon(for: app),
                                 name: app.name,
