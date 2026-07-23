@@ -36,10 +36,16 @@ struct SearchView: View {
                 .frame(width: cardWidth, height: listHeight)
         }
         .frame(width: cardWidth)
+        // Fill the rounded shape directly (via `in:`) so the material/tint are clipped
+        // to the corners — a plain `.background(material).clipShape(...)` leaves the
+        // material's NSVisualEffectView as an unclipped square behind the rounded card.
         .background(
-            Color(nsColor: .windowBackgroundColor)
-                .opacity(1 - model.config.transparency)
-                .background(.ultraThinMaterial)
+            Color(nsColor: .windowBackgroundColor).opacity(1 - model.config.transparency),
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+        )
+        .background(
+            .ultraThinMaterial,
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
