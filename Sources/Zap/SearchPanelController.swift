@@ -53,9 +53,20 @@ final class SearchPanelController {
         panel?.orderOut(nil)
     }
 
+    /// Card corner radius — must match the SwiftUI `RoundedRectangle` in SearchView.
+    private let cornerRadius: CGFloat = 18
+
     private func makePanel() -> KeyablePanel {
         let hosting = NSHostingView(rootView: SearchView(model: model))
         hosting.setFrameSize(hosting.fittingSize)
+
+        // Round the hosting layer itself, so any AppKit subview SwiftUI inserts for the
+        // material (an NSVisualEffectView filling the square bounds) is clipped to the
+        // corners too — SwiftUI's own clip doesn't mask that backing view.
+        hosting.wantsLayer = true
+        hosting.layer?.cornerRadius = cornerRadius
+        hosting.layer?.cornerCurve = .continuous
+        hosting.layer?.masksToBounds = true
 
         let panel = KeyablePanel(
             contentRect: NSRect(origin: .zero, size: hosting.fittingSize),
@@ -65,7 +76,7 @@ final class SearchPanelController {
         panel.contentView = hosting
         panel.isOpaque = false
         panel.backgroundColor = .clear
-        panel.hasShadow = false // shadow drawn by the SwiftUI card
+        panel.hasShadow = false
         panel.level = .modalPanel
         panel.isMovable = false
         panel.hidesOnDeactivate = false
