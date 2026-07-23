@@ -15,7 +15,12 @@
           version = "0.1.0";
           src = ./.;
 
-          nativeBuildInputs = [ pkgs.swift pkgs.swiftpm ];
+          nativeBuildInputs = [ pkgs.swift pkgs.swiftpm pkgs.darwin.sigtool ];
+
+          # `strip` invalidates the linker's ad-hoc code signature, which makes
+          # launchd kill the binary with OS_REASON_CODESIGNING. Keep the binary
+          # unstripped and re-sign ad-hoc in postInstall (mirrors build.sh).
+          dontStrip = true;
           # The modern nixpkgs Apple SDK (14) provides SwiftUI/AppKit/Carbon
           # headers and frameworks this app needs (macOS 14 APIs).
           buildInputs = [ pkgs.apple-sdk_14 ];
@@ -56,6 +61,9 @@
             # autostart with one command: `zap-autostart`.
             install -m 0755 contrib/install-login-item.sh "$out/bin/zap-autostart"
             install -m 0755 contrib/uninstall-login-item.sh "$out/bin/zap-autostart-off"
+
+            # Fresh ad-hoc signature so launchd/Gatekeeper accept the binary.
+            codesign --force --sign - "$appdir/Contents/MacOS/Zap"
             runHook postInstall
           '';
 
