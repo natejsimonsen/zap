@@ -9,6 +9,8 @@ final class LauncherModel: ObservableObject {
     @Published var query = "" { didSet { recompute() } }
     @Published private(set) var results: [AppEntry] = []
     @Published var selection = 0
+    /// Current user configuration, refreshed on each open.
+    @Published private(set) var config = Config()
 
     /// Invoked to dismiss the panel (set by the panel controller).
     var onClose: (() -> Void)?
@@ -17,8 +19,10 @@ final class LauncherModel: ObservableObject {
     private var iconCache: [URL: NSImage] = [:]
 
     /// Re-scan the disk. Cheap enough to run every time the panel opens.
+    /// Also reloads config so edits take effect on the next open.
     func reload() {
-        all = AppIndex.scan(paths: AppIndex.defaultSearchPaths())
+        config = Config.load()
+        all = AppIndex.scan(paths: AppIndex.searchPaths(config: config))
         recompute()
     }
 
@@ -67,7 +71,7 @@ final class LauncherModel: ObservableObject {
     func icon(for app: AppEntry) -> NSImage {
         if let cached = iconCache[app.url] { return cached }
         let image = NSWorkspace.shared.icon(forFile: app.url.path)
-        image.size = NSSize(width: 32, height: 32)
+        image.size = NSSize(width: 64, height: 64)
         iconCache[app.url] = image
         return image
     }

@@ -95,8 +95,67 @@ func testAppIndex() {
     check(Set(names).count == names.count, "results are de-duplicated")
 }
 
+func testConfig() {
+    print("Config")
+    let fm = FileManager.default
+    let dir = fm.temporaryDirectory.appendingPathComponent("zap-cfg-\(UUID().uuidString)")
+    try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+    defer { try? fm.removeItem(at: dir) }
+
+    // Missing file → all defaults.
+    let missing = Config.load(from: dir.appendingPathComponent("nope.json"))
+    check(missing == Config(), "missing file yields default config")
+    check(missing.density == .comfortable, "default density is comfortable")
+    check(missing.transparency == 0.8, "default transparency is 0.8")
+
+    func write(_ json: String) -> URL {
+        let u = dir.appendingPathComponent("\(UUID().uuidString).json")
+        try? json.data(using: .utf8)!.write(to: u)
+        return u
+    }
+
+    // Malformed JSON → defaults, no crash.
+    check(Config.load(from: write("{not json")) == Config(), "malformed json yields default config")
+
+    // Full config parses.
+    let full = Config.load(from: write("""
+    {"searchPaths":["~/Dev/Apps"," "],"accentColor":"purple","transparency":0.5,"density":"compact"}
+    """))
+    check(full.density == .compact, "parses density")
+    check(full.transparency == 0.5, "parses transparency")
+    check(full.searchPaths == ["~/Dev/Apps", " "], "parses searchPaths raw")
+    check(full.resolvedSearchPaths().count == 1, "blank search paths dropped on resolve")
+    check(full.resolvedSearchPaths().first?.path.hasPrefix(fm.homeDirectoryForCurrentUser.path) == true,
+          "tilde expanded in search path")
+    check(full.resolvedAccent() == RGBAColor(string: "#BF5AF2"), "named accent resolves to hex")
+
+    // Out-of-range transparency is clamped.
+    check(Config.load(from: write("{\"transparency\":5}")).transparency == 1.0, "transparency clamped to 1")
+    check(Config.load(from: write("{\"transparency\":-2}")).transparency == 0.0, "transparency clamped to 0")
+
+    // Merge with defaults, de-duplicated.
+    let merged = AppIndex.searchPaths(config: Config(searchPaths: ["/Applications", "/tmp/zap-extra"]))
+    check(merged.contains { $0.path == "/tmp/zap-extra" }, "config path added to search paths")
+    check(merged.filter { $0.path == "/Applications" }.count == 1, "duplicate default path de-duplicated")
+}
+
+func testAppearance() {
+    print("Appearance")
+    check(RGBAColor(string: "#ffffff") == RGBAColor(r: 1, g: 1, b: 1), "parses 6-digit hex")
+    check(RGBAColor(string: "000") == RGBAColor(r: 0, g: 0, b: 0), "parses 3-digit hex without #")
+    check(RGBAColor(string: "#ff000080")?.a == Double(128) / 255.0, "parses 8-digit hex alpha")
+    check(RGBAColor(string: "blue") != nil, "named color resolves")
+    check(RGBAColor(string: "not-a-color") == nil, "invalid color is nil")
+    check(Density.compact.metrics.cardWidth < Density.comfortable.metrics.cardWidth,
+          "compact is narrower than comfortable")
+    check(Density.simple.metrics.listHeight > Density.compact.metrics.listHeight,
+          "simple list taller than compact")
+}
+
 testFuzzyMatcher()
 testAppIndex()
+testConfig()
+testAppearance()
 
 print("")
 if failures == 0 {

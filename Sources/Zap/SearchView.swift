@@ -2,24 +2,33 @@ import SwiftUI
 import ZapCore
 
 /// The launcher card: a large search field over a scrolling, keyboard-navigable
-/// list of matching apps.
+/// list of matching apps. Sizing, accent colour, and translucency come from config.
 struct SearchView: View {
     @ObservedObject var model: LauncherModel
 
-    private let cardWidth: CGFloat = 640
-    private let listHeight: CGFloat = 360
+    private var metrics: LayoutMetrics { model.config.density.metrics }
+    private var cardWidth: CGFloat { metrics.cardWidth }
+    private var listHeight: CGFloat { metrics.listHeight }
+
+    private var accent: Color {
+        if let c = model.config.resolvedAccent() {
+            return Color(.sRGB, red: c.r, green: c.g, blue: c.b, opacity: c.a)
+        }
+        return .accentColor
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             SearchField(
                 text: $model.query,
+                fontSize: metrics.searchFontSize,
                 onMoveUp: model.moveUp,
                 onMoveDown: model.moveDown,
                 onSubmit: model.activate,
                 onCancel: model.cancel
             )
             .padding(.horizontal, 22)
-            .frame(height: 68)
+            .frame(height: metrics.searchFieldHeight)
 
             Divider().opacity(0.4)
 
@@ -27,7 +36,11 @@ struct SearchView: View {
                 .frame(width: cardWidth, height: listHeight)
         }
         .frame(width: cardWidth)
-        .background(.ultraThinMaterial)
+        .background(
+            Color(nsColor: .windowBackgroundColor)
+                .opacity(1 - model.config.transparency)
+                .background(.ultraThinMaterial)
+        )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -53,7 +66,11 @@ struct SearchView: View {
                             ResultRow(
                                 icon: model.icon(for: app),
                                 name: app.name,
-                                selected: index == model.selection
+                                selected: index == model.selection,
+                                accent: accent,
+                                iconSize: metrics.iconSize,
+                                fontSize: metrics.rowFontSize,
+                                verticalPadding: metrics.rowVerticalPadding
                             )
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -79,22 +96,26 @@ private struct ResultRow: View {
     let icon: NSImage
     let name: String
     let selected: Bool
+    let accent: Color
+    let iconSize: CGFloat
+    let fontSize: CGFloat
+    let verticalPadding: CGFloat
 
     var body: some View {
         HStack(spacing: 12) {
             Image(nsImage: icon)
                 .resizable()
-                .frame(width: 28, height: 28)
+                .frame(width: iconSize, height: iconSize)
             Text(name)
-                .font(.system(size: 16))
+                .font(.system(size: fontSize))
                 .lineLimit(1)
             Spacer()
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, verticalPadding)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(selected ? Color.accentColor.opacity(0.85) : .clear)
+                .fill(selected ? accent.opacity(0.85) : .clear)
         )
         .foregroundStyle(selected ? Color.white : Color.primary)
     }

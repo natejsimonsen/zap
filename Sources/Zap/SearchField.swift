@@ -6,6 +6,7 @@ import SwiftUI
 /// the field holds focus.
 struct SearchField: NSViewRepresentable {
     @Binding var text: String
+    var fontSize: CGFloat = 26
     var onMoveUp: () -> Void
     var onMoveDown: () -> Void
     var onSubmit: () -> Void
@@ -18,7 +19,7 @@ struct SearchField: NSViewRepresentable {
         field.isBordered = false
         field.drawsBackground = false
         field.focusRingType = .none
-        field.font = .systemFont(ofSize: 26, weight: .light)
+        field.font = .systemFont(ofSize: fontSize, weight: .light)
         field.delegate = context.coordinator
         field.cell?.usesSingleLineMode = true
         field.cell?.lineBreakMode = .byTruncatingTail
@@ -29,6 +30,9 @@ struct SearchField: NSViewRepresentable {
     func updateNSView(_ nsView: NSTextField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
+        }
+        if nsView.font?.pointSize != fontSize {
+            nsView.font = .systemFont(ofSize: fontSize, weight: .light)
         }
         // Keep the field focused whenever the panel is key.
         if let window = nsView.window, window.isKeyWindow,

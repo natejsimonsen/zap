@@ -24,6 +24,18 @@ public enum AppIndex {
         ]
     }
 
+    /// Default paths plus any extra directories from config, de-duplicated in order.
+    public static func searchPaths(config: Config = .load()) -> [URL] {
+        var seen = Set<String>()
+        var result: [URL] = []
+        for url in defaultSearchPaths() + config.resolvedSearchPaths() {
+            if seen.insert(url.standardizedFileURL.path).inserted {
+                result.append(url)
+            }
+        }
+        return result
+    }
+
     /// Scan the given paths, returning a de-duplicated, name-sorted list of apps.
     public static func scan(paths: [URL], fileManager: FileManager = .default) -> [AppEntry] {
         var seen = Set<String>()

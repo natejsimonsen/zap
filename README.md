@@ -64,6 +64,30 @@ Zap binds **⌥Space** and **⌘Space**, and either one toggles it.
 
 Zap logs a message via `NSLog` if it can't register a hotkey another app already owns.
 
+## Configuration
+
+Zap runs with sensible defaults and needs no config. To customize, create
+`~/.config/zap/config.json` — all keys are optional, and a missing or malformed file
+falls back to defaults:
+
+```json
+{
+  "searchPaths": ["~/Developer/Apps", "/opt/homebrew/Caskroom"],
+  "accentColor": "purple",
+  "transparency": 0.8,
+  "density": "comfortable"
+}
+```
+
+| Key | Values | Default | Effect |
+|-----|--------|---------|--------|
+| `searchPaths` | list of dirs (`~` allowed) | `[]` | Extra folders to scan, **added** to the built-in defaults |
+| `accentColor` | hex (`#RRGGBB`, `#RGB`, `#RRGGBBAA`) or a name: `blue` `purple` `pink` `red` `orange` `yellow` `green` `teal` `graphite` | system accent | Selection highlight color |
+| `transparency` | `0.0`–`1.0` | `0.8` | `0` = opaque, `1` = maximum blur / most see-through |
+| `density` | `compact` \| `simple` \| `comfortable` | `comfortable` | Row spacing, font, icon, and window size |
+
+Changes take effect the next time you open the launcher — no restart needed.
+
 ## Usage
 
 | Key | Action |

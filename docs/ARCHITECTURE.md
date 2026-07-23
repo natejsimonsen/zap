@@ -17,6 +17,8 @@ Zap is a Swift Package with two targets: a dependency-free, unit-tested core lib
 ┌───────────────────────────── ZapCore (library) ─────────────────────────┐
 │  AppIndex              scan app dirs → [AppEntry] (name, url)            │
 │  FuzzyMatcher          subsequence match + boundary-aware scoring        │
+│  Config                ~/.config/zap/config.json model (JSON, defaulted) │
+│  Appearance            RGBAColor parser + Density → LayoutMetrics        │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -28,7 +30,9 @@ Zap is a Swift Package with two targets: a dependency-free, unit-tested core lib
    Accessibility permission is needed. Each `HotKey` filters the shared Carbon handler
    on its own id so one press doesn't trigger both.
 2. On the hotkey, `SearchPanelController.toggle()` shows a borderless `NSPanel` centred
-   slightly above screen centre. `LauncherModel.reload()` re-scans the disk each open.
+   slightly above screen centre. `LauncherModel.reload()` re-reads `Config` and re-scans
+   the disk each open (so config edits and newly installed apps take effect immediately);
+   the panel resizes to the config's density on show.
 3. Typing flows through `SearchField` (an `NSTextField` wrapped in `NSViewRepresentable`)
    into `LauncherModel.query`. Its `didSet` calls `recompute()`, which filters `AppIndex`
    results through `FuzzyMatcher` and re-sorts by score.

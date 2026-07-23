@@ -39,6 +39,11 @@ final class SearchPanelController {
         let panel = panel ?? makePanel()
         self.panel = panel
 
+        // Resize to the current density (config may have changed since last open).
+        if let hosting = panel.contentView {
+            hosting.setFrameSize(hosting.fittingSize)
+            panel.setContentSize(hosting.fittingSize)
+        }
         position(panel)
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
