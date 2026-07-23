@@ -23,9 +23,11 @@ Zap is a Swift Package with two targets: a dependency-free, unit-tested core lib
 ## Flow
 
 1. `AppDelegate` sets the app to `.accessory` (menu-bar only), adds a status item, and
-   registers ⌘Space via `HotKey`. `RegisterEventHotKey` is used instead of a
-   `CGEventTap` specifically so no Accessibility permission is needed.
-2. On ⌘Space, `SearchPanelController.toggle()` shows a borderless `NSPanel` centred
+   registers two `HotKey`s — ⌥Space and ⌘Space — that both toggle the launcher.
+   `RegisterEventHotKey` is used instead of a `CGEventTap` specifically so no
+   Accessibility permission is needed. Each `HotKey` filters the shared Carbon handler
+   on its own id so one press doesn't trigger both.
+2. On the hotkey, `SearchPanelController.toggle()` shows a borderless `NSPanel` centred
    slightly above screen centre. `LauncherModel.reload()` re-scans the disk each open.
 3. Typing flows through `SearchField` (an `NSTextField` wrapped in `NSViewRepresentable`)
    into `LauncherModel.query`. Its `didSet` calls `recompute()`, which filters `AppIndex`

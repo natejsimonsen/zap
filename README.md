@@ -1,14 +1,15 @@
 # Zap ⚡
 
-A minimal macOS application launcher. Press **⌘Space**, type, hit **Enter** to launch.
-It searches *only* your installed applications — a focused, Spotlight-style launcher and
-nothing else. Runs as a menu-bar agent with no Dock icon.
+A minimal macOS application launcher. Press **⌥Space** (or **⌘Space**), type, hit **Enter**
+to launch. It searches *only* your installed applications — a focused, Spotlight-style
+launcher and nothing else. Runs as a menu-bar agent with no Dock icon.
 
 ![Zap searching for applications](docs/demo.gif)
 
 ## Features
 
-- Global **⌘Space** hotkey — no Accessibility permission required (Carbon `RegisterEventHotKey`).
+- Global **⌥Space** and **⌘Space** hotkeys — no Accessibility permission required
+  (Carbon `RegisterEventHotKey`). ⌥Space works immediately; ⌘Space needs Spotlight freed.
 - Fuzzy search over `/Applications`, `/System/Applications`, and `~/Applications`
   (including one nested level, e.g. `Utilities`, and hidden system apps like Safari).
 - Boundary-aware ranking: `sysp` → System Settings, `ps` → Photoshop, prefixes win.
@@ -52,22 +53,22 @@ open /Applications/Zap.app
 
 Add `/Applications/Zap.app` to **System Settings → General → Login Items** to start at login.
 
-## Required one-time setup: free up ⌘Space
+## Hotkeys
 
-macOS assigns ⌘Space to Spotlight, and only one app can own a global hotkey. Turn
-Spotlight's shortcut off so Zap can claim it:
+Zap binds **⌥Space** and **⌘Space**, and either one toggles it.
 
-**System Settings → Keyboard → Keyboard Shortcuts → Spotlight →** uncheck
-**"Show Spotlight search"** (⌘Space).
+- **⌥Space** is free by default, so Zap works right away with no setup.
+- **⌘Space** is owned by Spotlight. To use it, free it first:
+  **System Settings → Keyboard → Keyboard Shortcuts → Spotlight →** uncheck
+  **"Show Spotlight search"** (⌘Space).
 
-If ⌘Space still opens Spotlight, Zap couldn't register the hotkey — confirm the shortcut
-is really off (Zap logs a message via `NSLog` when registration fails).
+Zap logs a message via `NSLog` if it can't register a hotkey another app already owns.
 
 ## Usage
 
 | Key | Action |
 |-----|--------|
-| ⌘Space | Toggle the launcher |
+| ⌥Space / ⌘Space | Toggle the launcher |
 | type | Fuzzy-filter applications |
 | ↑ / ↓ | Move selection |
 | Enter | Launch selected app |
