@@ -77,6 +77,34 @@ resolves the stable `~/.flox/run/…` path, so it keeps working across `flox upg
 (For an `/Applications` install you can instead just add `Zap.app` to
 **System Settings → General → Login Items**.)
 
+A flox install exposes the same helper on `PATH` — run `zap-autostart` once (and
+`zap-autostart-off` to undo). No repo checkout needed.
+
+### Fully automatic in a flox environment
+
+`flox install` can't create the login item on its own (Nix/flox don't mutate the host on
+install). To make it fully hands-off — including for a **shared team environment** — add
+both the package and a guarded activation hook to that environment's
+`.flox/env/manifest.toml`:
+
+```toml
+[install]
+zap.flake = "github:natejsimonsen/zap"
+
+[profile]
+# Set up the login item on first activation; idempotent and cheap afterward
+# (skips once the LaunchAgent is loaded, which launchd does at every login).
+common = '''
+  if command -v zap-autostart >/dev/null 2>&1 && ! launchctl print "gui/$(id -u)/com.zap.launcher" >/dev/null 2>&1; then
+    zap-autostart >/dev/null 2>&1 || true
+  fi
+'''
+```
+
+Anyone who activates that environment then gets Zap **and** autostart with zero manual
+steps. The hook is a no-op on every activation after the first, so it won't restart Zap
+when you open a new shell.
+
 ## Hotkeys
 
 Zap binds **⌥Space** and **⌘Space**, and either one toggles it.
