@@ -1,4 +1,5 @@
 import AppKit
+import ZapCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
