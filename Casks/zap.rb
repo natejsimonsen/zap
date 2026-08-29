@@ -1,6 +1,6 @@
 cask "zap" do
-  version "0.1.0"
-  sha256 "0a1116d2443dab19ebd1cdd23d58098964da42667aff4e854f82a89b1639c0ca"
+  version "0.1.1"
+  sha256 "249117dfa9dcefda99b8c0317cbfaab76b82635d0b9c57bd151db17e2c4c53ea"
 
   url "https://github.com/natejsimonsen/zap/releases/download/v#{version}/Zap.zip"
   name "Zap"
