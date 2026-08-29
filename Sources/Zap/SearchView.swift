@@ -25,6 +25,7 @@ struct SearchView: View {
                 onMoveUp: model.moveUp,
                 onMoveDown: model.moveDown,
                 onSubmit: model.activate,
+                onForceQuit: model.forceQuitSelected,
                 onCancel: model.cancel
             )
             .padding(.horizontal, 22)
@@ -57,7 +58,9 @@ struct SearchView: View {
 
     @ViewBuilder
     private var resultsArea: some View {
-        if model.results.isEmpty {
+        if model.showHelp {
+            HelpOverlay(accent: accent)
+        } else if model.results.isEmpty {
             VStack {
                 Spacer()
                 Text(model.query.isEmpty ? "No applications found" : "No matches")
@@ -95,6 +98,36 @@ struct SearchView: View {
                 }
             }
         }
+    }
+}
+
+/// A minimal keyboard-shortcuts cheat sheet, shown in place of the results list.
+private struct HelpOverlay: View {
+    let accent: Color
+
+    private let shortcuts: [(key: String, action: String)] = [
+        ("↑ ↓", "Move selection"),
+        ("↵", "Launch"),
+        ("⌥ ↵", "Force quit"),
+        ("Esc", "Close"),
+        ("?", "Toggle this help"),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(shortcuts, id: \.key) { shortcut in
+                HStack(spacing: 14) {
+                    Text(shortcut.key)
+                        .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(accent)
+                        .frame(width: 56, alignment: .trailing)
+                    Text(shortcut.action)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 

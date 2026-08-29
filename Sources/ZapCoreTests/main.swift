@@ -183,11 +183,41 @@ func testHotKeySpec() {
           "valid custom hotkey used")
 }
 
+func testFrecency() {
+    print("Frecency")
+    let fm = FileManager.default
+    let dir = fm.temporaryDirectory.appendingPathComponent("zap-frecency-\(UUID().uuidString)")
+    try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+    defer { try? fm.removeItem(at: dir) }
+    let url = dir.appendingPathComponent("frecency.json")
+
+    let empty = FrecencyStore.load(from: url)
+    check(empty.score("Safari") == 0, "unknown app scores zero")
+
+    let now = Date()
+    let once = empty.recordLaunch("Safari", now: now)
+    check(once.score("Safari", now: now) == 1, "one launch scores 1 at zero age")
+
+    let twice = once.recordLaunch("Safari", now: now)
+    check(twice.score("Safari", now: now) == 2, "two launches score 2 at zero age")
+
+    let decayed = once.score("Safari", now: now.addingTimeInterval(14 * 86400))
+    check(abs(decayed - 0.5) < 0.001, "score halves after one half-life")
+
+    once.save(to: url)
+    let reloaded = FrecencyStore.load(from: url)
+    check(reloaded.score("Safari", now: now) == 1, "round-trips through disk")
+
+    check(FrecencyStore.load(from: dir.appendingPathComponent("nope.json")).entries.isEmpty,
+          "missing file yields empty store")
+}
+
 testFuzzyMatcher()
 testAppIndex()
 testConfig()
 testAppearance()
 testHotKeySpec()
+testFrecency()
 
 print("")
 if failures == 0 {

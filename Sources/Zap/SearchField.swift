@@ -10,6 +10,7 @@ struct SearchField: NSViewRepresentable {
     var onMoveUp: () -> Void
     var onMoveDown: () -> Void
     var onSubmit: () -> Void
+    var onForceQuit: () -> Void
     var onCancel: () -> Void
 
     func makeNSView(context: Context) -> NSTextField {
@@ -60,6 +61,9 @@ struct SearchField: NSViewRepresentable {
                 parent.onMoveDown(); return true
             case #selector(NSResponder.insertNewline(_:)):
                 parent.onSubmit(); return true
+            case #selector(NSResponder.insertNewlineIgnoringFieldEditor(_:)):
+                // Option+Return's standard key binding — repurposed as force-quit.
+                parent.onForceQuit(); return true
             case #selector(NSResponder.cancelOperation(_:)):
                 parent.onCancel(); return true
             default:
