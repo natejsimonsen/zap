@@ -26,10 +26,11 @@ jobs:
 
   nix:
     runs-on: macos-14
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@v14
       - name: nix flake check
         run: nix flake check -L
       - name: nix build
