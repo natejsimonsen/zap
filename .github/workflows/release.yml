@@ -1,18 +1,20 @@
 name: release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   release:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: macos-14
     steps:
-      # Check out main (not the detached tag) so we can push the cask update back.
-      # Tag releases from the tip of main so the built code matches the tag.
+      # Check out main (not the detached workflow_run sha) so we can push the cask update back.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: main
@@ -21,23 +23,20 @@ jobs:
       - name: Build app bundle
         run: ./build.sh
 
-      - name: Package and hash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          ditto -c -k --sequesterRsrc --keepParent Zap.app Zap.zip
-          SHA=$(shasum -a 256 Zap.zip | awk '{print $1}')
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "SHA=$SHA" >> "$GITHUB_ENV"
+      - name: Package app
+        run: ditto -c -k --sequesterRsrc --keepParent Zap.app Zap.zip
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
-        with:
-          files: Zap.zip
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update Homebrew cask
+        if: steps.semantic.outputs.new_release_published == 'true'
         run: |
+          VERSION="${{ steps.semantic.outputs.new_release_version }}"
+          SHA=$(shasum -a 256 Zap.zip | awk '{print $1}')
           sed -i '' "s/version \".*\"/version \"$VERSION\"/" Casks/zap.rb
           sed -i '' "s/sha256 \".*\"/sha256 \"$SHA\"/" Casks/zap.rb
           git config user.name "github-actions[bot]"
