@@ -24,6 +24,10 @@ run: ## Run without bundling (Dock icon appears in this mode)
 app: ## Build and bundle $(APP).app (ad-hoc signed)
 	./build.sh
 
+.PHONY: icon
+icon: ## Regenerate Resources/AppIcon.icns
+	./contrib/make-icon.sh
+
 .PHONY: install
 install: app ## Build the bundle and install to /Applications
 	rm -rf /Applications/$(APP).app
