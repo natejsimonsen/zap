@@ -39,6 +39,7 @@
             appdir="$out/Applications/Zap.app"
             mkdir -p "$appdir/Contents/MacOS" "$appdir/Contents/Resources" "$out/bin"
             cp .build/release/Zap "$appdir/Contents/MacOS/Zap"
+            cp Resources/AppIcon.icns "$appdir/Contents/Resources/AppIcon.icns"
             cat > "$appdir/Contents/Info.plist" <<EOF
             <?xml version="1.0" encoding="UTF-8"?>
             <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -51,6 +52,7 @@
               <key>CFBundleShortVersionString</key><string>0.1.0</string>
               <key>CFBundlePackageType</key><string>APPL</string>
               <key>CFBundleExecutable</key><string>Zap</string>
+              <key>CFBundleIconFile</key><string>AppIcon</string>
               <key>LSMinimumSystemVersion</key><string>14.0</string>
               <key>LSUIElement</key><true/>
               <key>NSHighResolutionCapable</key><true/>
