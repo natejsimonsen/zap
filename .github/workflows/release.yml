@@ -12,7 +12,7 @@ permissions:
 jobs:
   release:
     if: github.event.workflow_run.conclusion == 'success'
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       # Check out main (not the detached workflow_run sha) so we can push the cask update back.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
