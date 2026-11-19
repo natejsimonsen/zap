@@ -144,6 +144,34 @@ falls back to defaults:
 open the launcher. **`hotkeys` are read once at launch** — quit and relaunch Zap to apply.
 An all-invalid `hotkeys` list falls back to the defaults, so a typo never locks you out.
 
+### Adding search folders from the command line
+
+`zap add` and `zap remove` change the search folders without touching `config.json`.
+They take effect the next time you open the launcher.
+
+```sh
+zap add ~/work/tools/Applications     # search this folder too
+zap remove ~/work/tools/Applications  # stop searching it
+zap list                              # show folders added this way
+```
+
+Pass `--pid` to tie a folder to a process. Zap drops the folder when that process
+exits, so nothing has to call `zap remove`. In a flox environment, tie it to the shell
+from the `[profile]` section of `.flox/env/manifest.toml`:
+
+```toml
+[profile]
+common = '''
+  command -v zap >/dev/null 2>&1 && zap add "$FLOX_ENV/Applications" --pid $$
+'''
+```
+
+The folder is searched while that shell is open and forgotten when you leave it. Two
+shells in the same environment each hold their own claim, so closing one doesn't
+remove the folder for the other. These folders are stored in
+`~/.config/zap/dynamic-paths.json`. A Homebrew install puts `zap` on your `PATH`; so
+does a flox install.
+
 ## Usage
 
 | Key | Action |

@@ -8,6 +8,7 @@ cask "zap" do
   homepage "https://github.com/natejsimonsen/zap"
 
   app "Zap.app"
+  binary "#{appdir}/Zap.app/Contents/MacOS/Zap", target: "zap"
 
   caveats <<~EOS
     Zap is not notarized, so on first launch macOS Gatekeeper may block it.

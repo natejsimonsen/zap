@@ -24,11 +24,14 @@ public enum AppIndex {
         ]
     }
 
-    /// Default paths plus any extra directories from config, de-duplicated in order.
-    public static func searchPaths(config: Config = .load()) -> [URL] {
+    /// Default paths, plus extra directories from config, plus live ones added with
+    /// `zap add`, de-duplicated in order.
+    public static func searchPaths(
+        config: Config = .load(), dynamic: DynamicPaths = .load()
+    ) -> [URL] {
         var seen = Set<String>()
         var result: [URL] = []
-        for url in defaultSearchPaths() + config.resolvedSearchPaths() {
+        for url in defaultSearchPaths() + config.resolvedSearchPaths() + dynamic.resolvedPaths() {
             if seen.insert(url.standardizedFileURL.path).inserted {
                 result.append(url)
             }

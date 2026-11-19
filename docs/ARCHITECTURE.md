@@ -18,6 +18,8 @@ Zap is a Swift Package with two targets: a dependency-free, unit-tested core lib
 │  AppIndex              scan app dirs → [AppEntry] (name, url)            │
 │  FuzzyMatcher          subsequence match + boundary-aware scoring        │
 │  Config                ~/.config/zap/config.json model (JSON, defaulted) │
+│  DynamicPaths          folders added by `zap add`, optional per-process  │
+│  CLI                   `zap add|remove|list` parsing and execution       │
 │  Appearance            RGBAColor parser + Density → LayoutMetrics        │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -38,6 +40,15 @@ Zap is a Swift Package with two targets: a dependency-free, unit-tested core lib
    results through `FuzzyMatcher` and re-sorts by score.
 4. `SearchView` renders the ranked list. ↑/↓ move the selection; Enter calls
    `NSWorkspace.open` on the selected bundle and dismisses the panel.
+
+## Command line
+
+The `Zap` binary is also the `zap` command. `main.swift` checks the arguments first:
+with a command (`add`, `remove`, `list`) it runs `CLI` and exits without starting
+AppKit; with none it starts the app. The commands only edit
+`~/.config/zap/dynamic-paths.json`. The running app needs no signal, because it
+re-reads that file on every open. An entry can carry a process id; `AppIndex` skips
+entries whose process has exited, and the next `zap add`/`remove` deletes them.
 
 ## Why the split
 

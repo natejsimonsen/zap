@@ -139,6 +139,98 @@ func testConfig() {
     check(merged.filter { $0.path == "/Applications" }.count == 1, "duplicate default path de-duplicated")
 }
 
+func testDynamicPaths() {
+    print("DynamicPaths")
+    let fm = FileManager.default
+    let dir = fm.temporaryDirectory.appendingPathComponent("zap-dyn-\(UUID().uuidString)")
+    defer { try? fm.removeItem(at: dir) }
+    // Nested, so `update` has to create the directory.
+    let store = dir.appendingPathComponent("nested/dynamic-paths.json")
+    let me = ProcessInfo.processInfo.processIdentifier
+    let alive: (Int32) -> Bool = { $0 == 100 }
+
+    check(DynamicPaths.load(from: store).entries.isEmpty, "missing file yields empty store")
+    check(DynamicPaths.normalize("  ") == nil, "blank path rejected")
+    check(DynamicPaths.normalize("apps/../bin", cwd: "/opt/env") == "/opt/env/bin",
+          "relative path resolved against cwd and standardized")
+    check(DynamicPaths.normalize("~/x") == fm.homeDirectoryForCurrentUser.path + "/x",
+          "tilde expanded")
+    check(DynamicPaths.processIsAlive(me), "own process is alive")
+
+    let paths = DynamicPaths()
+        .adding("/a").adding("/a")
+        .adding("/b", pid: 100).adding("/b", pid: 200)
+        .adding("/c", pid: 200)
+    check(paths.entries.count == 4, "adding the same entry twice is a no-op")
+    check(paths.resolvedPaths(isAlive: alive).map(\.path) == ["/a", "/b"],
+          "entries of dead processes are ignored, live ones de-duplicated")
+    check(paths.removing("/b", pid: 100).resolvedPaths(isAlive: alive).map(\.path) == ["/a"],
+          "remove with pid drops only that owner")
+    check(paths.removing("/b", pid: 100).entries.count == 3, "other owner's entry is kept")
+    check(!paths.removing("/b").entries.contains { $0.path == "/b" },
+          "remove without pid drops every owner")
+    check(paths.removing("/a", pid: 100) == paths, "remove with pid leaves unowned entry alone")
+
+    let merged = AppIndex.searchPaths(config: Config(), dynamic: paths.removing("/c"))
+    check(merged.contains { $0.path == "/a" }, "dynamic path added to search paths")
+
+    // The command line, end to end against a temp store.
+    check(CLI.isGUIInvocation([]), "no arguments starts the app")
+    check(CLI.isGUIInvocation(["-psn_0_123"]), "macOS launch flags start the app")
+    check(!CLI.isGUIInvocation(["add", "/x"]), "a command does not start the app")
+    check((try? CLI.parse(["add", "/x", "--pid", "42"])) == .add(path: "/x", pid: 42),
+          "parses add with pid")
+    check((try? CLI.parse(["remove", "--pid", "42", "/x"])) == .remove(path: "/x", pid: 42),
+          "pid may come before the path")
+    check((try? CLI.parse(["add"])) == nil, "add without a directory is an error")
+    check((try? CLI.parse(["add", "/x", "--pid", "abc"])) == nil, "non-numeric pid is an error")
+    check(CLI.run(["bogus"], store: store).status == 2, "unknown command exits 2")
+
+    check(CLI.run(["add", "/x"], store: store).status == 0, "add succeeds and creates the directory")
+    check(CLI.run(["add", "/y", "--pid", "\(me)"], store: store).status == 0, "add with live pid succeeds")
+    check(CLI.run(["list"], store: store).output == "/x\n/y", "list prints live paths")
+    check(CLI.run(["remove", "/x"], store: store).status == 0, "remove succeeds")
+    check(CLI.run(["list"], store: store).output == "/y", "removed path is gone")
+
+    // A dead owner: not listed, and pruned from the file by the next write.
+    try? DynamicPaths.update(at: store, isAlive: { _ in true }) { $0.adding("/dead", pid: 100) }
+    try? DynamicPaths.update(at: store, isAlive: alive) { $0 }
+    check(DynamicPaths.load(from: store).entries == [.init(path: "/dead", pid: 100)],
+          "update prunes entries whose process is gone")
+}
+
+/// End to end with a real process: a folder added for a process is scanned while the
+/// process runs and dropped once it exits, with no `zap remove`.
+func testDynamicPathsFollowProcess() {
+    print("DynamicPaths (real process)")
+    let fm = FileManager.default
+    let dir = fm.temporaryDirectory.appendingPathComponent("zap-proc-\(UUID().uuidString)")
+    defer { try? fm.removeItem(at: dir) }
+    let apps = dir.appendingPathComponent("env/Applications")
+    try? fm.createDirectory(at: apps.appendingPathComponent("EnvTool.app"),
+                            withIntermediateDirectories: true)
+    let store = dir.appendingPathComponent("dynamic-paths.json")
+
+    func visibleApps() -> [String] {
+        let paths = AppIndex.searchPaths(config: Config(), dynamic: .load(from: store))
+        return AppIndex.scan(paths: paths).map(\.name)
+    }
+
+    let shell = Process()
+    shell.executableURL = URL(fileURLWithPath: "/bin/sleep")
+    shell.arguments = ["60"]
+    guard (try? shell.run()) != nil else { check(false, "could not start helper process"); return }
+
+    check(!visibleApps().contains("EnvTool"), "app is not visible before zap add")
+    let added = CLI.run(["add", apps.path, "--pid", "\(shell.processIdentifier)"], store: store)
+    check(added.status == 0, "zap add --pid succeeds")
+    check(visibleApps().contains("EnvTool"), "app is visible while the owning process runs")
+
+    shell.terminate()
+    shell.waitUntilExit()
+    check(!visibleApps().contains("EnvTool"), "app disappears once the owning process exits")
+}
+
 func testAppearance() {
     print("Appearance")
     check(RGBAColor(string: "#ffffff") == RGBAColor(r: 1, g: 1, b: 1), "parses 6-digit hex")
@@ -215,6 +307,8 @@ func testFrecency() {
 testFuzzyMatcher()
 testAppIndex()
 testConfig()
+testDynamicPaths()
+testDynamicPathsFollowProcess()
 testAppearance()
 testHotKeySpec()
 testFrecency()
